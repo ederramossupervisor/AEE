@@ -174,26 +174,49 @@ function excluirAluno(){
 }
 
 // ---------- PDF ----------
-function cabecalho(doc){
+let BRASAO = null; // {data, w, h}
+function carregarBrasao(){
+  return new Promise(res=>{
+    if(BRASAO) return res(BRASAO);
+    const img = new Image();
+    img.onload = ()=>{
+      try {
+        const c = document.createElement("canvas");
+        c.width = img.naturalWidth; c.height = img.naturalHeight;
+        c.getContext("2d").drawImage(img,0,0);
+        BRASAO = {data:c.toDataURL("image/png"), w:img.naturalWidth, h:img.naturalHeight};
+      } catch(e){ BRASAO = null; }
+      res(BRASAO);
+    };
+    img.onerror = ()=>res(null);
+    img.src = "brasao.png";
+  });
+}
+function cabecalho(doc, brasao){
   const W = doc.internal.pageSize.getWidth();
+  if(brasao){
+    const w = 24, h = w * brasao.h / brasao.w;
+    doc.addImage(brasao.data, "PNG", (W-w)/2, 8, w, h);
+  }
   doc.setFont("helvetica","bold"); doc.setFontSize(9);
   ["GOVERNO DO ESTADO DO ESPÍRITO SANTO","SECRETARIA DE ESTADO DA EDUCAÇÃO",
    "SUBSECRETARIA DE EDUCAÇÃO, BÁSICA E PROFISSIONAL",
    "GERÊNCIA DE EDUCAÇÃO ESPECIAL NA PERSPECTIVA DA EDUCAÇÃO INCLUSIVA"]
-   .forEach((t,i)=>doc.text(t, W/2, 18+i*4.5, {align:"center"}));
-  return 42;
+   .forEach((t,i)=>doc.text(t, W/2, 32+i*4.5, {align:"center"}));
+  return 50;
 }
 function fmtData(v){ if(!v) return "____/____/______"; const [y,m,d]=v.split("-"); return `${d}/${m}/${y}`; }
 const MESES = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
 function sub(t){ return t && t.trim() ? t : "____________________"; }
 
-function pdfTermo(){
+async function pdfTermo(){
   const d = coletar();
   if(!d.nome.trim()) return alert("Preencha o cadastro do estudante.");
+  const brasao = await carregarBrasao();
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({unit:"mm", format:"a4"});
   const W = doc.internal.pageSize.getWidth(), M = 20, TW = W - 2*M;
-  let y = cabecalho(doc) + 6;
+  let y = cabecalho(doc, brasao) + 6;
 
   doc.setFontSize(12); doc.text("TERMO DE MATRÍCULA NO AEE", W/2, y, {align:"center"}); y += 12;
 
