@@ -68,4 +68,376 @@
           <label class="form-label d-block">Dias da semana (AEE no contraturno)</label>
           <div id="dias" class="d-flex gap-3 flex-wrap"></div>
         </div>
-        <div class="col-md-6"><label class="form-label">Horário</label>
+        <div class="col-md-6"><label class="form-label">Horário</label><input id="horario" class="form-control" placeholder="ex.: 13h às 14h30"></div>
+        <div class="col-md-6"><label class="form-label">Cidade (local da assinatura)</label><input id="cidadeAssin" class="form-control"></div>
+        <div class="col-md-6"><label class="form-label">Data</label><input id="dataTermo" type="date" class="form-control"></div>
+        <div class="col-md-6"><label class="form-label">Opção do responsável</label>
+          <select id="opcaoTermo" class="form-select" onchange="aoMudarOpcao()">
+            <option value="aceita">Comprometo-me a trazer o estudante</option>
+            <option value="dispensa">Dispenso o serviço</option>
+          </select></div>
+        <div class="col-12" id="boxMotivo" style="display:none">
+          <label class="form-label">Motivos da dispensa</label><textarea id="motivo" class="form-control" rows="2"></textarea>
+        </div>
+      </div>
+      <button class="btn btn-success mt-3" onclick="pdfTermo()">Baixar PDF do Termo</button>
+    </div>
+  </div>
+</div>
+
+<datalist id="cids"></datalist>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const ESCOLAS = {
+  "CEEFMTI Afonso Cláudio": {city:"Afonso Cláudio", director:"Allan Dyoni Dehete Many"},
+  "CEEFMTI Elisa Paiva": {city:"Conceição do Castelo", director:"Rosangela Vargas Davel Pinto"},
+  "EE Ivana Casagrande Scabelo": {city:"Venda Nova do Imigrante", director:"Maristela Broedel"},
+  "EE Severino Paste": {city:"Venda Nova do Imigrante", director:"Maristela Broedel"},
+  "EEEFM Alto Rio Possmoser": {city:"Santa Maria de Jetibá", director:"Adriana da Conceição Tesch"},
+  "EEEFM Álvaro Castelo": {city:"Brejetuba", director:"Rose Fabrícia Moretto"},
+  "EEEFM Domingos Perim": {city:"Venda Nova do Imigrante", director:"Maristela Broedel"},
+  "EEEFM Elvira Barros": {city:"Afonso Cláudio", director:"Andrea Gomes Klug"},
+  "EEEFM Fazenda Camporês": {city:"Brejetuba", director:"Emerson Ungarato"},
+  "EEEFM Fazenda Emílio Schroeder": {city:"Santa Maria de Jetibá", director:"Jorge Schneider"},
+  "EEEFM Fioravante Caliman": {city:"Venda Nova do Imigrante", director:"Celina Januário Moreira"},
+  "EEEFM Frederico Boldt": {city:"Santa Maria de Jetibá", director:"David Felberg"},
+  "EEEFM Gisela Salloker Fayet": {city:"Domingos Martins", director:"Maxwel Augusto Neves"},
+  "EEEFM Graça Aranha": {city:"Santa Maria de Jetibá", director:"Camilo Pauli Dominicini"},
+  "EEEFM Joaquim Caetano de Paiva": {city:"Laranja da Terra", director:"Miriam Klitzke Seibel"},
+  "EEEFM José Cupertino": {city:"Afonso Cláudio", director:"Cléria Pagotto Ronchi Zanelato"},
+  "EEEFM José Giestas": {city:"Afonso Cláudio", director:"Gederson Vargas Dazilio"},
+  "EEEFM José Roberto Christo": {city:"Afonso Cláudio", director:"Andressa Silva Dias"},
+  "EEEFM Leogildo Severiano de Souza": {city:"Brejetuba", director:"Adalberto Carlos Araújo Chaves"},
+  "EEEFM Luiz Jouffroy": {city:"Laranja da Terra", director:"Nilza Abel Gumz"},
+  "EEEFM Maria de Abreu Alvim": {city:"Afonso Cláudio", director:"Maria das Graças Fabio Costa"},
+  "EE Mário Bergamin": {city:"Venda Nova do Imigrante", director:"Celina Januário Moreira"},
+  "EEEFM Marlene Brandão": {city:"Brejetuba", director:"Paulynne Ayres Tatagiba Gonçalves"},
+  "EEEFM Pedra Azul": {city:"Domingos Martins", director:"Elizabeth Drumond Ambrósio Filgueiras"},
+  "EEEFM Ponto do Alto": {city:"Domingos Martins", director:"Marcelo Ribett"},
+  "EEEFM Profª Aldy Soares Merçon Vargas": {city:"Conceição do Castelo", director:"Israel Augusto Moreira Borges"},
+  "EEEFM Prof Hermann Berger": {city:"Santa Maria de Jetibá", director:"Eliane Raasch Bicalho"},
+  "EEEFM São Jorge": {city:"Brejetuba", director:"Jormi Maria da Silva"},
+  "EEEFM São Luís": {city:"Santa Maria de Jetibá", director:"Valdirene Mageski Cordeiro Magri"},
+  "EEEFM Teófilo Paulino": {city:"Domingos Martins", director:"Delfina Schneider Stein"},
+  "EEEM Francisco Guilherme": {city:"Santa Maria de Jetibá", director:"Jonatas André Drescher"},
+  "EEEM Mata fria": {city:"Afonso Cláudio", director:"Jonatas André Drescher"},
+  "EEEFM Tutorial Teste": {city:"Afonso Cláudio", director:"Diretor Teste"},
+  "EEEM Sobreiro": {city:"Laranja da Terra", director:"Jonatas André Drescher"}
+};
+const CIDS = [
+ "F70 / 6A00.0 - Deficiência intelectual leve","F71 / 6A00.1 - Deficiência intelectual moderada","F72 / 6A00.2 - Deficiência intelectual grave",
+ "F73 / 6A00.3 - Deficiência intelectual profunda","F78 / 6A00.4 - Outro retardo mental","F79 / 6A00.Z - Deficiência intelectual não especificada",
+ "H90 - Deficiência auditiva","H91 - Outras perdas de audição",
+ "G80 - Paralisia cerebral","G81 a G83 - Outras síndromes paralíticas","Q65 - Malformações congênitas do quadril",
+ "H53 - Distúrbios visuais","H54.0 - Cegueira em ambos os olhos","H54.1 - Cegueira em um olho e visão subnormal em outro","H54.2 - Visão subnormal de ambos os olhos",
+ "H54.4 - Cegueira em um olho","H54.5 - Visão subnormal em um olho","H54.7 - Perda não especificada da visão",
+ "6A02.0 - TEA sem DI e com leve ou nenhum prejuízo da linguagem funcional","6A02.1 - TEA com DI e com leve ou nenhum prejuízo da linguagem funcional",
+ "6A02.2 - TEA sem DI e com linguagem funcional prejudicada","6A02.3 - TEA com DI e linguagem funcional prejudicada",
+ "6A02.4 - TEA com DI e sem linguagem funcional","6A02.Y - Outro TEA especificado","6A02.Z - TEA não especificado",
+ "F84.0 - Autismo infantil (CID-10)","F84.1 - Autismo atípico (CID-10)","F84.5 - Síndrome de Asperger (CID-10)","F84.9 - TGD não especificado (CID-10)",
+ "6A01 / F80 - Transtornos do desenvolvimento da fala e da linguagem","6A03 / F81 - Transtornos do desenvolvimento do aprendizado",
+ "6A04 / F82 - Transtorno do desenvolvimento da coordenação motora","6A05 / F90 - TDAH","6A05.0 - TDAH desatento","6A05.1 - TDAH hiperativo","6A05.2 - TDAH combinado",
+ "6A06 / F98.4 - Transtorno do movimento estereotipado","F95 - Tiques","8A05.00 / F95.2 - Síndrome de Tourette",
+ "F91 - Distúrbios de conduta","F93 - Transtornos emocionais da infância","Q90 - Síndrome de Down","G40 - Epilepsia"
+];
+const DEF = ["Deficiência auditiva e surdez","Deficiência física","Deficiência intelectual","Transtorno do espectro autista","Deficiência múltipla","Deficiência visual","Cegueira","Baixa visão","Surdocegueira"];
+const ACESS = ["Maca","Cadeira de rodas","Muletas","Andador"];
+const IND = ["Observação do professor regente","Sondagem do professor do AEE","Indicação por pares (colegas)","Indicação de pais e familiares","Interesse espontâneo do estudante"];
+const CARAC = ["Alto grau de curiosidade.","Criatividade e imaginação.","Boa memória.","Iniciativa / liderança.","Atenção concentrada.","Vocabulário avançado para sua idade cronológica.",
+ "Persistência para realizar tarefas.","Riqueza de expressão verbal (elaboração e fluência de ideias).","Independência e autonomia.","Habilidade para considerar pontos de vista de outras pessoas.",
+ "Interesse por áreas e tópicos diversos.","Facilidade para interagir com crianças mais velhas ou com adultos.","Facilidade de aprendizagem.","Habilidade para notar discrepâncias entre ideias e pontos de vista.",
+ "Habilidade para lidar com ideias abstratas.","Alto nível de energia.","Interesse por livros e/ou tecnologias.","Senso de humor e originalidade para resolver problemas.","Preferência por situações/objetos novos."];
+const DIAS = ["SEG","TER","QUA","QUI","SEX"];
+const KEY = "aee_alunos";
+const CAMPOS = ["escola","cidade","diretor","nome","idAluno","nasc","anoLetivo","serie","turma","turno","ensino","prof","pedagoga","tipoAtend",
+  "responsavel","horario","cidadeAssin","dataTermo","opcaoTermo","motivo"];
+const $ = id => document.getElementById(id);
+let atualId = null;
+
+// ---- helpers de HTML ----
+const chk = (id,l) => `<div class="form-check"><input class="form-check-input" type="checkbox" id="${id}" data-f><label class="form-check-label" for="${id}">${l}</label></div>`;
+const grp = (p,arr) => arr.map((l,i)=>chk(p+i,l)).join("");
+const inp = (id,l,c="col-md-6",x="") => `<div class="${c}"><label class="form-label">${l}</label><input id="${id}" class="form-control" data-f ${x}></div>`;
+const sel = (id,l,c="col-md-4") => `<div class="${c}"><label class="form-label">${l}</label><select id="${id}" class="form-select" data-f><option value="">—</option><option>Sim</option><option>Não</option></select></div>`;
+const ta = (id,l,r=2) => `<div class="col-12"><label class="form-label">${l}</label><textarea id="${id}" class="form-control" rows="${r}" data-f></textarea></div>`;
+const tit = t => `<div class="col-12"><h6 class="border-bottom pb-1 mt-2">${t}</h6></div>`;
+
+$("tabInfo").innerHTML = `
+<div class="row g-3">
+  ${inp("indicacao","Indicação ao AEE")}
+  <div id="blocoReg" class="col-12"><div class="row g-3">
+    ${tit("Tipo de deficiência / indicação ao AEE (Censo Escolar)")}
+    <div class="col-12"><div class="row">${DEF.map((l,i)=>`<div class="col-md-6">${chk("def"+i,l)}</div>`).join("")}</div></div>
+    ${tit("Dados de identificação")}
+    ${sel("diag","Apresenta diagnóstico clínico?")}
+    ${inp("diagRes","Resultado do diagnóstico clínico (CID)","col-md-8",'list="cids"')}
+    ${sel("alim","Necessita de alimentação diferenciada?")}${inp("alimQual","Qual?","col-md-8")}
+    ${sel("transp","Necessita de transporte escolar?")}
+    ${sel("apoio","Necessita de profissional de apoio escolar (cuidador)?","col-md-8")}
+    <div class="col-12"><label class="form-label d-block">Meio específico de acessibilidade</label>
+      <div class="d-flex flex-wrap gap-3">${grp("ac",ACESS)}</div></div>
+    ${inp("acOutros","Outros meios de acessibilidade")}
+    <div class="col-md-6"><label class="form-label d-block">Frequenta CAEE?</label>
+      <div class="d-flex gap-3">${chk("caeeApae","Apae")}${chk("caeePest","Pestalozzi")}</div></div>
+    ${inp("caeeOutra","CAEE – outra")}
+    ${tit("Dados da área da saúde")}
+    ${inp("terapias","Frequenta terapias? Quais?")}${inp("terapOnde","Onde?")}
+    ${inp("medic","Faz uso de medicação? Quais?")}${inp("sus","Acompanhamento com especialista via SUS? Quais?")}
+    ${ta("obsInfo","Observações")}
+  </div></div>
+  <div id="blocoAH" class="col-12" style="display:none"><div class="row g-3">
+    ${tit("Como o estudante foi indicado(a)?")}
+    <div class="col-12">${grp("ind",IND)}</div>
+    ${tit("Principais características apontadas pelos(as) professores(as)")}
+    <div class="col-12"><div class="row">${CARAC.map((l,i)=>`<div class="col-md-6">${chk("car"+i,l)}</div>`).join("")}</div></div>
+    ${inp("carOutros","Outros. Quais?","col-12")}
+    ${tit("Outras informações")}
+    ${ta("ah1","1. O estudante apresenta outros interesses especiais?")}
+    ${ta("ah2","2. Cite algumas características marcantes no estudante (emocional, cognitiva, social e de personalidade).")}
+    ${ta("ah3","3. Informações mencionadas pela família a respeito dos talentos do estudante.")}
+  </div></div>
+  ${inp("dataInfo","Data","col-md-4",'type="date"')}
+</div>
+<button class="btn btn-success mt-3" onclick="pdfInfo()">Baixar PDF das Informações iniciais</button>`;
+
+$("escola").innerHTML = '<option value="">Selecione...</option>' +
+  Object.keys(ESCOLAS).sort((a,b)=>a.localeCompare(b,'pt')).map(e=>`<option>${e}</option>`).join("");
+$("dias").innerHTML = DIAS.map(d=>chk("d"+d,d)).join("");
+$("cids").innerHTML = CIDS.map(c=>`<option value="${c}">`).join("");
+CAMPOS.forEach(c=>$(c).setAttribute("data-f",""));
+
+function aoMudarOpcao(){ $("boxMotivo").style.display = $("opcaoTermo").value==="dispensa" ? "" : "none"; }
+function aoMudarTipo(){
+  const ah = $("tipoAtend").value==="AH/SD";
+  $("blocoAH").style.display = ah ? "" : "none";
+  $("blocoReg").style.display = ah ? "none" : "";
+}
+function aoMudarEscola(){
+  const e = ESCOLAS[$("escola").value];
+  $("cidade").value = e ? e.city : "";
+  $("diretor").value = e ? e.director : "";
+  if (e && !$("cidadeAssin").value) $("cidadeAssin").value = e.city;
+}
+
+// ---- armazenamento ----
+function lerAlunos(){ try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){ return {}; } }
+function gravar(o){ try { localStorage.setItem(KEY, JSON.stringify(o)); } catch(e){ alert("Não foi possível salvar."); } }
+function atualizarLista(){
+  const a = lerAlunos();
+  $("listaAlunos").innerHTML = '<option value="">— selecione —</option>' +
+    Object.entries(a).map(([id,v])=>`<option value="${id}" ${id===atualId?"selected":""}>${v.nome||"(sem nome)"}</option>`).join("");
+}
+function coletar(){
+  const o = {};
+  document.querySelectorAll("[data-f]").forEach(el=>{ o[el.id] = el.type==="checkbox" ? el.checked : el.value; });
+  return o;
+}
+function preencher(o){
+  document.querySelectorAll("[data-f]").forEach(el=>{
+    if(el.type==="checkbox") el.checked = !!o[el.id];
+    else el.value = o[el.id] ?? (el.tagName==="SELECT" ? el.options[0].value : (el.id==="anoLetivo" ? "2026" : ""));
+  });
+  aoMudarOpcao(); aoMudarTipo();
+}
+function salvarAluno(){
+  const d = coletar();
+  if(!d.nome.trim()) return alert("Informe o nome do estudante.");
+  const a = lerAlunos();
+  if(!atualId) atualId = "a" + Date.now();
+  a[atualId] = d; gravar(a); atualizarLista(); alert("Estudante salvo.");
+}
+function carregarAluno(){
+  const id = $("listaAlunos").value; if(!id) return;
+  atualId = id; preencher(lerAlunos()[id]);
+}
+function novoAluno(){ atualId = null; preencher({}); $("listaAlunos").value=""; }
+function excluirAluno(){
+  const id = $("listaAlunos").value; if(!id || !confirm("Excluir este estudante?")) return;
+  const a = lerAlunos(); delete a[id]; gravar(a); if(atualId===id) novoAluno(); atualizarLista();
+}
+
+// ---------- PDF ----------
+let BRASAO = null;
+function carregarBrasao(){
+  return new Promise(res=>{
+    if(BRASAO) return res(BRASAO);
+    const img = new Image();
+    img.onload = ()=>{
+      try {
+        const c = document.createElement("canvas");
+        c.width = img.naturalWidth; c.height = img.naturalHeight;
+        c.getContext("2d").drawImage(img,0,0);
+        BRASAO = {data:c.toDataURL("image/png"), w:img.naturalWidth, h:img.naturalHeight};
+      } catch(e){ BRASAO = null; }
+      res(BRASAO);
+    };
+    img.onerror = ()=>res(null);
+    img.src = "brasao.png";
+  });
+}
+function cabecalho(doc, brasao){
+  const W = doc.internal.pageSize.getWidth();
+  if(brasao){
+    const w = 24, h = w * brasao.h / brasao.w;
+    doc.addImage(brasao.data, "PNG", (W-w)/2, 8, w, h);
+  }
+  doc.setFont("helvetica","bold"); doc.setFontSize(9);
+  ["GOVERNO DO ESTADO DO ESPÍRITO SANTO","SECRETARIA DE ESTADO DA EDUCAÇÃO",
+   "SUBSECRETARIA DE EDUCAÇÃO, BÁSICA E PROFISSIONAL",
+   "GERÊNCIA DE EDUCAÇÃO ESPECIAL NA PERSPECTIVA DA EDUCAÇÃO INCLUSIVA"]
+   .forEach((t,i)=>doc.text(t, W/2, 32+i*4.5, {align:"center"}));
+  doc.setFont("helvetica","normal");
+  return 50;
+}
+const MESES = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+function sub(t){ return t && t.trim() ? t : "____________________"; }
+function fmtData(v){ if(!v) return "____/____/______"; const [y,m,d]=v.split("-"); return `${d}/${m}/${y}`; }
+function idade(v){
+  if(!v) return "";
+  const [y,m,d] = v.split("-").map(Number), h = new Date();
+  let a = h.getFullYear()-y;
+  if(h.getMonth()+1 < m || (h.getMonth()+1===m && h.getDate()<d)) a--;
+  return a;
+}
+
+// motor genérico para documentos longos
+function novoPdf(brasao){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:"mm", format:"a4"});
+  return {doc, brasao, M:15, TW:180, W:210, y:cabecalho(doc,brasao)+2};
+}
+function need(P,h){ if(P.y+h>285){ P.doc.addPage(); P.y = cabecalho(P.doc,P.brasao)+2; } }
+function barra(P,t){
+  need(P,9); const {doc}=P;
+  doc.setFillColor(220,230,241); doc.rect(P.M,P.y,P.TW,6,"FD");
+  doc.setFont("helvetica","bold"); doc.setFontSize(9.5); doc.text(t,P.W/2,P.y+4.3,{align:"center"});
+  P.y += 8;
+}
+function txt(P,t){
+  const {doc}=P; doc.setFont("helvetica","normal"); doc.setFontSize(9.5);
+  const l = doc.splitTextToSize(t,P.TW); need(P,l.length*4.6);
+  doc.text(l,P.M,P.y+3.5); P.y += l.length*4.6+1.5;
+}
+const marca = b => b ? "( X )" : "(    )";
+const sn = (v,extra="") => (v==="Sim"?"( X ) Sim   (    ) Não":v==="Não"?"(    ) Sim   ( X ) Não":"(    ) Sim   (    ) Não") + (extra?"    "+extra:"");
+function checks(P,items,get,cols){
+  const {doc}=P, cw = P.TW/cols; doc.setFont("helvetica","normal"); doc.setFontSize(9);
+  for(let i=0;i<items.length;i+=cols){
+    const row = items.slice(i,i+cols).map(t=>doc.splitTextToSize(t,cw-10));
+    const h = Math.max(...row.map(l=>l.length))*4.2+1.2; need(P,h);
+    row.forEach((l,k)=>{ doc.text(marca(get(i+k)),P.M+k*cw,P.y+3.5); doc.text(l,P.M+k*cw+10,P.y+3.5); });
+    P.y += h;
+  }
+  P.y += 1.5;
+}
+function assinaturas(P,nomes){
+  barra(P,"Assinaturas");
+  nomes.forEach(n=>txt(P,n+": ______________________________________________________________"));
+}
+
+async function pdfInfo(){
+  const d = coletar();
+  if(!d.nome.trim()) return alert("Preencha o cadastro do estudante.");
+  const ah = d.tipoAtend==="AH/SD";
+  const P = novoPdf(await carregarBrasao());
+  barra(P, ah ? "INFORMAÇÕES INICIAIS DO ESTUDANTE - AH/SD" : "INFORMAÇÕES INICIAIS DO ESTUDANTE");
+  txt(P,"Unidade Escolar: "+d.escola);
+  txt(P,"Nome do estudante: "+d.nome);
+  txt(P,`Ano/Série: ${d.serie}     Turma: ${d.turma}     Turno/Período: ${d.turno}`);
+  txt(P,`Data de nascimento: ${fmtData(d.nasc)}     Idade: ${idade(d.nasc)}     Ano letivo: ${d.anoLetivo}`);
+  if(!ah) txt(P,"Indicação ao AEE: "+d.indicacao);
+  txt(P,"Professor Especializado: "+d.prof);
+
+  if(!ah){
+    barra(P,"TIPO DE DEFICIÊNCIA/INDICAÇÃO AO AEE – CENSO ESCOLAR");
+    checks(P,DEF,i=>d["def"+i],2);
+    barra(P,"DADOS DE IDENTIFICAÇÃO");
+    txt(P,"Apresenta diagnóstico clínico?   "+sn(d.diag));
+    txt(P,"Resultado do diagnóstico clínico: "+d.diagRes);
+    if(d.diag==="Não") txt(P,"Em caso de ausência do diagnóstico, encaminhar para avaliação na unidade de saúde.");
+    txt(P,"Necessita de alimentação diferenciada?   "+sn(d.alim, d.alim==="Sim" ? "Qual? "+d.alimQual : ""));
+    txt(P,"Necessita de transporte escolar?   "+sn(d.transp));
+    txt(P,"Necessita de algum meio específico de acessibilidade?");
+    checks(P,[...ACESS,"Outros (especificar): "+d.acOutros],i=> i<4 ? d["ac"+i] : !!d.acOutros,2);
+    txt(P,"Necessita de profissional de apoio escolar (cuidador)?   "+sn(d.apoio));
+    txt(P,"Frequenta Centro de Atendimento Educacional Especializado (CAEE)?");
+    checks(P,["Apae","Pestalozzi","Outra: "+d.caeeOutra],i=>[d.caeeApae,d.caeePest,!!d.caeeOutra][i],3);
+    barra(P,"DADOS DA ÁREA DA SAÚDE");
+    txt(P,`Frequenta terapias? Quais? ${d.terapias}     Onde? ${d.terapOnde}`);
+    txt(P,"Faz uso de medicação? Quais? "+d.medic);
+    txt(P,"Faz acompanhamento com especialista via SUS? Quais? "+d.sus);
+    txt(P,"Observações: "+d.obsInfo);
+  } else {
+    barra(P,"COMO O ESTUDANTE FOI INDICADO (A)?");
+    checks(P,IND,i=>d["ind"+i],1);
+    barra(P,"QUAIS AS PRINCIPAIS CARACTERÍSTICAS APONTADAS PELOS (AS) PROFESSORES?");
+    checks(P,[...CARAC,"Outros. Quais? "+d.carOutros],i=> i<CARAC.length ? d["car"+i] : !!d.carOutros,2);
+    barra(P,"OUTRAS INFORMAÇÕES");
+    txt(P,"1. O estudante apresenta outros interesses especiais?\n"+d.ah1);
+    txt(P,"2. Cite algumas características marcantes no estudante (emocional, cognitiva, social e de personalidade).\n"+d.ah2);
+    txt(P,"3. Informações mencionadas pela família a respeito dos talentos do estudante.\n"+d.ah3);
+  }
+  need(P,40);
+  assinaturas(P,["Diretor da Unidade Escolar","CP ou Pedagogo","Responsável legal"]);
+  txt(P,"Data: "+fmtData(d.dataInfo));
+  if(!ah) txt(P,"*Anexar documentos complementares, quando houver.");
+  P.doc.save(`Informacoes_iniciais_${d.nome.replace(/\s+/g,"_")}.pdf`);
+}
+
+async function pdfTermo(){
+  const d = coletar();
+  if(!d.nome.trim()) return alert("Preencha o cadastro do estudante.");
+  const brasao = await carregarBrasao();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:"mm", format:"a4"});
+  const W = doc.internal.pageSize.getWidth(), M = 20, TW = W - 2*M;
+  let y = cabecalho(doc, brasao) + 6;
+
+  doc.setFont("helvetica","bold"); doc.setFontSize(12); doc.text("TERMO DE MATRÍCULA NO AEE", W/2, y, {align:"center"}); y += 12;
+
+  doc.setFont("helvetica","normal"); doc.setFontSize(10.5);
+  const p1 = `Eu, ${sub(d.responsavel)} responsável pelo/a estudante ${d.nome}, regularmente matriculado na Escola ${sub(d.escola)}, série/ano ${sub(d.serie)} do Ensino ${sub(d.ensino)}, turma ${sub(d.turma)} turno ${sub(d.turno)},`;
+  let l = doc.splitTextToSize(p1, TW); doc.text(l, M, y, {align:"justify", maxWidth:TW}); y += l.length*5.2 + 2;
+
+  const p2 = "DECLARO que foi disponibilizado ao mesmo (a) o serviço complementar/suplementar de Atendimento Educacional Especializado que será no contraturno. Reconheço que esse serviço é um direito prescrito no Art. 208, III da Constituição Federal/88; Política Nacional de Educação Especial na Perspectiva da Educação Inclusiva /2008; Resolução no. 04/2009; Decreto no. 7.611/09/2011; afirmando que esse atendimento complementa e/ou suplementa a formação dos alunos com vistas à autonomia e independência na escola e fora dela, favorecendo o processo de inclusão escolar.";
+  l = doc.splitTextToSize(p2, TW); doc.text(l, M, y, {align:"justify", maxWidth:TW}); y += l.length*5.2 + 4;
+
+  doc.setFont("helvetica","bold"); doc.text("Assim sendo:", M, y); y += 5;
+  doc.setFont("helvetica","normal");
+
+  const aceita = d.opcaoTermo==="aceita";
+  doc.rect(M, y, TW, 36);
+  let by = y + 6;
+  doc.text("Comprometo-me em trazer o (a) estudante, pelo (a) qual sou responsável, nos dias e horários abaixo estipulados.", M+2, by, {maxWidth:TW-4}); by += 11;
+  const dias = DIAS.map(x => `${x} ( ${aceita && d["d"+x] ? "X" : " "} )`).join("     ");
+  doc.text("Dias da Semana:   " + dias, M+2, by); by += 8;
+  doc.text("Horário: " + (aceita && d.horario ? d.horario : "_______________________"), M+2, by); by += 8;
+  doc.text("Assinatura do responsável: ______________________________________________", M+2, by);
+  y += 44;
+
+  doc.rect(M, y, TW, 36);
+  by = y + 6;
+  doc.setFont("helvetica","bold"); doc.text("Dispenso", M+2, by);
+  doc.setFont("helvetica","normal");
+  doc.text(" o serviço de Atendimento Educacional Especializado, no contraturno da Escola, oferecido", M+2+doc.getTextWidth("Dispenso"), by);
+  by += 5; doc.text("ao estudante, pelo (a) qual sou responsável, pelos seguintes motivos.", M+2, by); by += 7;
+  const mot = !aceita && d.motivo ? doc.splitTextToSize(d.motivo, TW-4).slice(0,2) : ["______________________________________________________________________","______________________________________________________________________"];
+  mot.forEach(t=>{ doc.text(t, M+2, by); by += 6; });
+  doc.text("Assinatura do Responsável: ______________________________________________", M+2, by+2);
+  y += 48;
+
+  let dt = "______ de __________________ de 20______";
+  if(d.dataTermo){ const [yy,mm,dd]=d.dataTermo.split("-"); dt = `${dd} de ${MESES[+mm-1]} de ${yy}`; }
+  doc.text(`${d.cidadeAssin || "_______________________"}, ${dt}`, W/2, y, {align:"center"}); y += 22;
+  doc.line(W/2-45, y, W/2+45, y); y += 5;
+  doc.text(d.diretor || "", W/2, y, {align:"center"}); y += 5;
+  doc.text("Assinatura e Carimbo do Diretor(a) da Unidade de Ensino", W/2, y, {align:"center"});
+
+  doc.save(`Termo_AEE_${d.nome.replace(/\s+/g,"_")}.pdf`);
+}
+
+preencher({});
+atualizarLista();
+</script>
+</body>
+</html>
