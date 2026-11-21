@@ -143,14 +143,14 @@
 
   function medir(P, w, texto, min) {
     P.doc.setFont("helvetica", "normal"); P.doc.setFontSize(9.5);
-    const l = P.doc.splitTextToSize(texto || "", w - 4);
+    const l = window.linhasJ(P.doc, texto, w - 4);
     return { l, h: Math.max(min, 10 + l.length * 4.6) };
   }
   function quadro(P, x, y, w, h, titulo, linhas) {
     const doc = P.doc;
     doc.rect(x, y, w, h);
     doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); doc.text(titulo, x + 2, y + 4.5);
-    doc.setFont("helvetica", "normal"); doc.text(linhas, x + 2, y + 9.5);
+    doc.setFont("helvetica", "normal"); window.desenhaJ(doc, linhas, x + 2, y + 9.5, w - 4);
   }
   function quadroInteiro(P, titulo, texto, min) {
     const m = medir(P, P.TW, texto, min);
