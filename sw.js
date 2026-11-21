@@ -1,5 +1,5 @@
-const CACHE = "aee-v4";
-const BASE = ["./", "index.html", "estudo-caso.js", "paee.js", "pacote.js", "melhorias.js", "genero.js", "validacao.js", "datas.js",
+const CACHE = "aee-v5";
+const BASE = ["./", "index.html", "estudo-caso.js", "paee.js", "pacote.js", "melhorias.js", "genero.js", "validacao.js", "datas.js", "padroes.js",
   "brasao.png", "manifest.json", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
