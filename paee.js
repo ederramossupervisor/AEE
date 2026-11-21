@@ -89,11 +89,11 @@
   function caixa(P, titulo, texto, min) {
     const doc = P.doc;
     doc.setFont("helvetica", "normal"); doc.setFontSize(9.5);
-    const l = doc.splitTextToSize(texto || "", P.TW - 4), h = Math.max(min, 10 + l.length * 4.6);
+    const l = window.linhasJ(doc, texto, P.TW - 4), h = Math.max(min, 10 + l.length * 4.6);
     need(P, h);
     doc.rect(P.M, P.y, P.TW, h);
     doc.setFont("helvetica", "bold"); doc.text(titulo, P.M + 2, P.y + 4.5);
-    doc.setFont("helvetica", "normal"); doc.text(l, P.M + 2, P.y + 9.5);
+    doc.setFont("helvetica", "normal"); window.desenhaJ(doc, l, P.M + 2, P.y + 9.5, P.TW - 4);
     P.y += h;
   }
   function cabecaDupla(P) {
@@ -110,14 +110,14 @@
     doc.setFont("helvetica", "bold"); doc.setFontSize(8.5);
     const tl = doc.splitTextToSize(titulo, w - 4), th = tl.length * 3.8 + 3;
     doc.setFont("helvetica", "normal"); doc.setFontSize(9.5);
-    const la = doc.splitTextToSize(a || "", w - 4), lb = doc.splitTextToSize(b || "", w - 4);
+    const la = window.linhasJ(doc, a, w - 4), lb = window.linhasJ(doc, b, w - 4);
     const h = Math.max(min, th + Math.max(la.length, lb.length) * 4.6 + 3);
     need(P, h);
     [[0, la], [1, lb]].forEach(([k, l]) => {
       const x = P.M + k * w;
       doc.rect(x, P.y, w, h);
       doc.setFont("helvetica", "bold"); doc.setFontSize(8.5); doc.text(tl, x + 2, P.y + 4);
-      doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.text(l, x + 2, P.y + th + 3.5);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); window.desenhaJ(doc, l, x + 2, P.y + th + 3.5, w - 4);
     });
     P.y += h;
   }
