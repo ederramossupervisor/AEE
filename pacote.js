@@ -6,7 +6,7 @@
   [["manifest", "manifest.json"], ["apple-touch-icon", "apple-touch-icon.png"], ["icon", "icon-192.png"]].forEach(([rel, href]) => {
     const l = document.createElement("link"); l.rel = rel; l.href = href; head.appendChild(l);
   });
-  const tc = document.createElement("meta"); tc.name = "theme-color"; tc.content = "#0d6efd"; head.appendChild(tc);
+  const tc = document.createElement("meta"); tc.name = "theme-color"; tc.content = "#2b4acb"; head.appendChild(tc);
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
   }
