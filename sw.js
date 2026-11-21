@@ -1,6 +1,6 @@
-const CACHE = "aee-v1";
-const BASE = ["./", "index.html", "estudo-caso.js", "paee.js", "pacote.js", "brasao.png",
-  "manifest.json", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
+const CACHE = "aee-v4";
+const BASE = ["./", "index.html", "estudo-caso.js", "paee.js", "pacote.js", "melhorias.js", "genero.js", "validacao.js", "datas.js",
+  "brasao.png", "manifest.json", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(BASE)).then(() => self.skipWaiting()));
