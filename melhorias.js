@@ -72,13 +72,39 @@
   avisoBackup();
 
   // ============ 2. TEXTOS LONGOS QUEBRANDO PÁGINA ============
-  // texto corrido (relatórios, observações etc.)
+  // ---- justificação de texto corrido ----
+  // linhasJ: quebra o texto em linhas e marca, em .fim, quais são a última linha de cada parágrafo
+  window.linhasJ = function (doc, texto, w) {
+    const out = [], fim = [];
+    String(texto || "").split(/\r\n|\r|\n/).forEach(par => {
+      const ls = par === "" ? [""] : doc.splitTextToSize(par, w);
+      ls.forEach((t, i) => { out.push(t); fim.push(i === ls.length - 1); });
+    });
+    out.fim = fim;
+    return out;
+  };
+  // desenha uma linha; justifica quando ela não é a última do parágrafo
+  window.linhaJ = function (doc, t, ultima, x, y, w) {
+    const justifica = !ultima && t.trim() && !/ {3,}|_{3,}/.test(t) && doc.getTextWidth(t) > w * 0.55;
+    // o jsPDF só justifica linhas que têm uma linha seguinte; a "" ao lado serve para isso
+    if (justifica) doc.text([t, ""], x, y, { align: "justify", maxWidth: w });
+    else doc.text(t, x, y);
+  };
+  // desenha várias linhas com o mesmo espaçamento do doc.text(array)
+  window.desenhaJ = function (doc, linhas, x, y, w) {
+    const passo = doc.getLineHeightFactor() * doc.getFontSize() / doc.internal.scaleFactor;
+    linhas.forEach((t, i) => window.linhaJ(doc, t, linhas.fim ? linhas.fim[i] : true, x, y + i * passo, w));
+  };
+
+  // texto corrido (relatórios, observações etc.) — justificado
   window.txt = function (P, t) {
-    const doc = P.doc, l = doc.splitTextToSize(t || "", P.TW);
-    l.forEach(ln => {
+    const doc = P.doc;
+    doc.setFont("helvetica", "normal"); doc.setFontSize(9.5);
+    const l = window.linhasJ(doc, t, P.TW);
+    l.forEach((ln, i) => {
       need(P, 4.6);
       doc.setFont("helvetica", "normal"); doc.setFontSize(9.5);
-      doc.text(ln, P.M, P.y + 3.5); P.y += 4.6;
+      window.linhaJ(doc, ln, l.fim[i], P.M, P.y + 3.5, P.TW); P.y += 4.6;
     });
     P.y += 1.5;
   };
