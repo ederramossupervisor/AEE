@@ -182,7 +182,7 @@ const tit = t => `<div class="col-12"><h6 class="border-bottom pb-1 mt-2">${t}</
 
 $("tabInfo").innerHTML = `
 <div class="row g-3">
-  ${inp("indicacao","Indicação ao AEE")}
+  ${ta("indicacao","Indicação ao AEE")}
   <div id="blocoReg" class="col-12"><div class="row g-3">
     ${tit("Tipo de deficiência / indicação ao AEE (Censo Escolar)")}
     <div class="col-12"><div class="row">${DEF.map((l,i)=>`<div class="col-md-6">${chk("def"+i,l)}</div>`).join("")}</div></div>
@@ -230,6 +230,50 @@ function aoMudarTipo(){
   $("blocoAH").style.display = ah ? "" : "none";
   $("blocoReg").style.display = ah ? "none" : "";
 }
+// ---- Indicação ao AEE automática (Diretrizes Operacionais 2025, seção 8.2) ----
+const AEE_TXT = {
+  cog:"Desenvolvimento de funções cognitivas",
+  vida:"Desenvolvimento de vida autônoma",
+  info:"Ensino da informática acessível",
+  caa:"Ensino do uso da Comunicação Alternativa e Aumentativa (CAA)",
+  libras:"Ensino da Língua Brasileira de Sinais (Libras)",
+  lp2:"Ensino da Língua Portuguesa como segunda língua",
+  soroban:"Ensino das técnicas do cálculo no Soroban",
+  braille:"Ensino do Sistema Braille",
+  om:"Ensino de técnicas para orientação e mobilidade",
+  opt:"Ensino do uso de recursos ópticos e não ópticos"
+};
+const AEE_ORDEM = Object.keys(AEE_TXT);
+// mesma ordem do vetor DEF
+const AEE_POR_DEF = [
+  ["libras","lp2"],                          // Deficiência auditiva e surdez
+  ["caa","info"],                            // Deficiência física
+  ["cog","vida","info","caa"],               // Deficiência intelectual
+  ["cog","vida","info","caa"],               // Transtorno do espectro autista
+  [],                                        // Deficiência múltipla
+  ["om","opt","info"],                       // Deficiência visual
+  ["soroban","braille","om","opt","info"],   // Cegueira
+  ["om","opt","info"],                       // Baixa visão
+  ["vida","info","caa"]                      // Surdocegueira
+];
+function textoIndicacao(marcados){
+  const usa = new Set();
+  marcados.forEach((m,i)=>{ if(m) AEE_POR_DEF[i].forEach(k=>usa.add(k)); });
+  if(usa.size) return AEE_ORDEM.filter(k=>usa.has(k)).map(k=>AEE_TXT[k]).join("; ");
+  return marcados[4] ? "A depender das especificidades do estudante" : "";
+}
+$("tabInfo").addEventListener("change", e=>{
+  const m = /^def(\d+)$/.exec(e.target.id); if(!m) return;
+  const marcados = DEF.map((_,i)=>$("def"+i).checked);
+  const antes = marcados.slice(); antes[+m[1]] = !e.target.checked;
+  const campo = $("indicacao"), atual = campo.value.trim();
+  // só atualiza se o campo estiver vazio ou ainda com o texto automático anterior (não apaga texto digitado)
+  if(atual==="" || atual===textoIndicacao(antes)){
+    campo.value = textoIndicacao(marcados);
+    campo.dispatchEvent(new Event("input",{bubbles:true}));
+  }
+});
+
 function aoMudarEscola(){
   const e = ESCOLAS[$("escola").value];
   $("cidade").value = e ? e.city : "";
