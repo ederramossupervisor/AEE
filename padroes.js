@@ -78,10 +78,20 @@
   // pedagogo(a) lembrado(a) por escola
   const origEscola = window.aoMudarEscola;
   window.aoMudarEscola = function () {
+    const antiga = g("cidade").value;
     origEscola();
+    // a cidade da assinatura acompanha a escola, a menos que tenha sido editada à mão
+    const c = g("cidadeAssin");
+    if (!c.value.trim() || c.value === antiga) c.value = g("cidade").value;
     const p = ler(), e = g("escola").value;
     if (e && !g("pedagoga").value.trim() && p.ped && p.ped[e]) g("pedagoga").value = p.ped[e];
   };
+
+  // estudantes antigos com a cidade da assinatura vazia recebem a cidade da escola
+  function sincronizarCidade() {
+    const c = g("cidadeAssin");
+    if (!c.value.trim() && g("cidade").value) c.value = g("cidade").value;
+  }
 
   // ============ ANO LETIVO AUTOMÁTICO + APLICAÇÃO AO ABRIR "NOVO" ============
   const anoAtual = () => String(new Date().getFullYear());
@@ -91,6 +101,7 @@
     const novo = !atualId; // sem estudante aberto = estudante novo
     if (!o || !o.anoLetivo) g("anoLetivo").value = anoAtual();
     if (novo) aplicarPadroes();
+    sincronizarCidade();
     toggleH();
     // estudantes antigos (só com texto de horário) mantêm o horário que já tinham
     if (DIAS.some(d => g("h" + d).value) || !(o && o.horario)) atualizaHorario();
@@ -99,6 +110,7 @@
   // estado inicial da página
   g("anoLetivo").value = anoAtual();
   aplicarPadroes();
+  sincronizarCidade();
   toggleH();
   atualizaHorario();
 })();
